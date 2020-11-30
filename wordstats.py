@@ -7,6 +7,7 @@ Created on Mon Nov 23 15:34:22 2020
 
 import string
 import numpy as np
+import pandas as pd
 
     
 def cleanString(inpStr):
@@ -44,9 +45,12 @@ def cleanString(inpStr):
     return(wordList)
 
 
-def countPhrase(inpLst,filtLen=1):
+def countPhrase(inpLst,filtLen=1,ignore = None):
     """apply matching filter along input list, counting repeats"""
     
+    if ignore is not None:
+        inpLst = [w for w in inpLst if w not in ignore]
+        
     if filtLen > 1:
         #apply filter
         
@@ -61,9 +65,7 @@ def countPhrase(inpLst,filtLen=1):
     
     unique, counts = np.unique(filtered, return_counts=True)
     
-    stats = dict(zip(unique,counts))
-    
-    return(stats)
+    return(unique, counts)
 
 
 if __name__ == "__main__":
@@ -75,6 +77,36 @@ if __name__ == "__main__":
     cont = "".join(data)
     
     clean = cleanString(cont)
+    statistics = pd.DataFrame()
     
-    count = countPhrase(clean,1)
+    ignore = ["and","the","be","by","to","of","on","an","in","at","it","as","is","a"]
     
+    print("ignoring words: ")
+    print(ignore)
+    print()
+    
+    firstunique = -1
+    n = 0
+    
+    storage = {}
+    
+    while firstunique != 0:
+        
+        n += 1
+        
+        col = "{} word".format(n)        
+        if n != 1:
+            col = col + "s"
+        
+        print("analysis for " + col + ":")
+        
+        unique, counts = countPhrase(clean,n,ignore)
+        
+        temp = pd.DataFrame({"phrase":unique,"count":counts}).sort_values("count", ascending = False)
+    
+        firstunique = list(temp["count"]).index(1)
+        print("there are {} non-uniques".format(firstunique))
+        
+        multi = np.array(temp)[:firstunique,:]
+        
+        storage[str(n)] = multi
