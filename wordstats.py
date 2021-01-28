@@ -70,43 +70,103 @@ def countPhrase(inpLst,filtLen=1,ignore = None):
 
 if __name__ == "__main__":
 
-    with open("test.txt","r") as o:
+    #load document to test
+    with open("sample.txt","r") as o:
         data = o.readlines()
     
-    #join as continuous string
-    cont = "".join(data)
-    
-    clean = cleanString(cont)
-    statistics = pd.DataFrame()
-    
-    ignore = ["and","the","be","by","to","of","on","an","in","at","it","as","is","a"]
-    
+    #load exceptions (prevents spam of commonly used words)
+    with open("ignore.txt") as i:
+        ignore = i.readlines()        
+        ignore = [x.strip() for x in ignore]
     print("ignoring words: ")
     print(ignore)
     print()
     
-    firstunique = -1
-    n = 0
+    #join as continuous string and run a cleanup
+    cont = "".join(data)
     
+    clean = cleanString(cont)
+    
+    
+    nonuniq = -1 #counter for non-unique words
+    n = 0    
     storage = {}
-    
-    while firstunique != 0:
+
+    #run for increasing phrase lengths until a set of wholly unique phrases is found    
+    while nonuniq != 0:        
         
-        n += 1
+        n += 1        
+        currentLen = "{} word".format(n) 
+        print("analysis for " + currentLen + " strings:")
         
-        col = "{} word".format(n)        
-        if n != 1:
-            col = col + "s"
-        
-        print("analysis for " + col + ":")
-        
+        #generate list of unique word patterns and their respective counts
         unique, counts = countPhrase(clean,n,ignore)
         
-        temp = pd.DataFrame({"phrase":unique,"count":counts}).sort_values("count", ascending = False)
+        #use pandas to sort phrases into a descending order of usage
+        temp = pd.DataFrame({"phrase":unique,"count":counts})        
+        temp = temp.sort_values("count", ascending = False)
     
-        firstunique = list(temp["count"]).index(1)
-        print("there are {} non-uniques".format(firstunique))
+        #the index of the first count of 1 (unique phrase)
+        #counts the number of non-unique phrases used before it
+        #within the descending list
+        nonuniq = list(temp["count"]).index(1)
+        print("\tfound {} non-uniques".format(nonuniq))
         
-        multi = np.array(temp)[:firstunique,:]
+        if nonuniq != 0:
+            #store these reused phrases for anaylsis
+            multi = np.array(temp)[:nonuniq,:]        
+            storage[currentLen] = multi
+            
+            
+            
+            
+    with open("result.txt","w+") as o:
         
-        storage[str(n)] = multi
+        o.write("-"*49)
+        o.write("\nWordStats breakdown of word usage in scanned file\n")
+        o.write("-"*49 + "\n")
+                
+        
+        #format for a more readable vertical setup
+        widths = []
+        
+        vsplit = "\n++"
+        header = "\n||"
+        
+        #set up columns
+        nRows = len(storage[list(storage.keys())[0]])
+        rows = ["\n|| "]*nRows
+        
+        for key in storage.keys():
+            data = storage[key]
+            words = data[:,0]
+            
+            maxwidth = max([len(x) for x in words])
+            
+            header += key.ljust(maxwidth) + "        ||"
+            vsplit += "-"*maxwidth + "--------++"
+            
+            for i in range(len(rows)):
+                
+                
+                if i < len(data):
+                    
+                    word = data[i,0].ljust(maxwidth)
+                    count = str(data[i,1]).ljust(3)
+                    
+                    text = word + " | " + count + " || "
+                
+                else:
+                    
+                    text = " "*maxwidth + " |     || "
+                    
+                rows[i] += text
+                    
+                    
+        o.write(vsplit)
+        o.write(header)
+        o.write(vsplit)        
+        for row in rows:
+            o.write(row)            
+        o.write(vsplit)
+        
