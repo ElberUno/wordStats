@@ -1,6 +1,6 @@
 # wordStats
-Take a string of text and return counts of phrases used
+Python script to take a block of text and return counts of phrases used
 
-pass the string and phrase length. A phrase length of 1 will count the word usage
+scans increasing phrase lengths until all unique phrases are found. A scan length of 1 will count repeated words in a document, for example.
 
-running the script will scan phrase lengths upwards from 1 until it hits a length that has no repeats
+ignore.txt is pre-populated and contains a list of words to exclude from this scan, and should contain any overly common connective words such as "and", "but", "be", etc.
