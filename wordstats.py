@@ -78,9 +78,11 @@ if __name__ == "__main__":
     with open("ignore.txt") as i:
         ignore = i.readlines()        
         ignore = [x.strip() for x in ignore]
-    print("ignoring words: ")
-    print(ignore)
-    print()
+        #also ignore single letters
+        ignore += list(string.ascii_lowercase)
+    # print("ignoring words: ")
+    # print(ignore)
+    # print()
     
     #join as continuous string and run a cleanup
     cont = "".join(data)
